@@ -41,7 +41,12 @@ async function run() {
         res.send(result)
     })
 
-    
+    app.get('/Jobs/:category', async(req, res)=>{
+        const category = req.params.category
+        const query = { category: category }
+        const result = await JobsData.find(query).toArray()
+        res.send(result)
+    })
 
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
