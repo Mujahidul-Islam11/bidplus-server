@@ -54,7 +54,23 @@ async function run() {
         const result = await JobsData.findOne(query)
         res.send(result)
     })
-
+    app.put('/JobsId/:id', async (req, res) => {
+        const id = req.params.id
+        const filter = {_id: new ObjectId(id) }
+        const update =req.body
+        const cart = {
+          $set: {
+            name:update.email,
+            brandName:update.jobTitle,
+            rating:update.deadline,
+            price:update.price,
+            description:update.description,
+            type:update.category,
+          }
+        }
+        const result = await JobsData.updateOne(filter, cart);
+        res.send(result);
+      })
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
