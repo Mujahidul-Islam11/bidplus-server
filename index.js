@@ -36,15 +36,29 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/Bids", async(req, res)=>{
+    app.post("/Bids", async (req, res) => {
       const cursor = req.body;
-      const result = await BidData.insertOne(cursor)
-      res.send(result)
-    })
-    app.get("/Bids", async(req, res)=>{
-      const result = await BidData.find().toArray();
-      res.send(result)
-    })
+      const result = await BidData.insertOne(cursor);
+      res.send(result);
+    });
+
+    app.get("/Bids", async (req, res) => {
+      let query = {};
+      if (req.query.email) {
+        query = { email: req.query.email };
+      }
+      const result = await BidData.find(query).toArray();
+      res.send(result);
+    });
+
+    app.get("/BidReq", async (req, res) => {
+      let query = {};
+      if (req.query.buyerEmail) {
+        query = { buyerEmail: req.query.buyerEmail };
+      }
+      const result = await BidData.find(query).toArray();
+      res.send(result);
+    });
 
     app.get("/Jobs", async (req, res) => {
       const result = await JobsData.find().toArray();
@@ -65,29 +79,43 @@ async function run() {
       res.send(result);
     });
     app.get("/JobEmail", async (req, res) => {
-      let query = {}
-        if(req.query.email){
-            query={email :req.query.email}
-        }
-      const result = await JobsData.find(query).toArray()
-      res.send(result)
+      let query = {};
+      if (req.query.email) {
+        query = { email: req.query.email };
+      }
+      const result = await JobsData.find(query).toArray();
+      res.send(result);
     });
 
     app.put("/JobsId/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const update = req.body;
-      const cart = {
+      const updatedJobs = {
         $set: {
-          name: update.email,
-          brandName: update.jobTitle,
-          rating: update.deadline,
+          email: update.email,
+          jobTitle: update.jobTitle,
+          deadline: update.deadline,
           price: update.price,
           description: update.description,
-          type: update.category,
+          category: update.category,
+          status: update.status,
         },
       };
-      const result = await JobsData.updateOne(filter, cart);
+      const result = await JobsData.updateOne(filter, updatedJobs);
+      res.send(result);
+    });
+
+    app.put('/BidReq/:id', async (req, res) => {
+      const id = req.params.id
+      const query = { _id: new ObjectId(id) }
+      const updateStatus = {
+        $set: {
+          status: req.body.status,
+        },
+      };
+
+      const result = await BidData.updateOne(query, updateStatus);
       res.send(result);
     });
 
