@@ -150,7 +150,6 @@ async function run() {
           description: update.description,
           category: update.category,
           status: update.status,
-          
         },
       };
       const result = await JobsData.updateOne(filter, updatedJobs);
