@@ -1,19 +1,36 @@
 const express = require("express");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
-const jwt = require('jsonwebtoken')
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 5000;
-const cookieParser = require('cookie-parser')
-
+const cookieParser = require("cookie-parser");
 
 app.use(express.json());
-app.use(cors({
-  origin: 'http://localhost:5173',
-  credentials:true
-}));
-app.use(cookieParser())
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "https://skillswaphub-6e7fd.web.app"],
+    credentials: true,
+  })
+);
+app.use(cookieParser());
+
+const verifyToken = (req, res, next) => {
+  const token = req?.cookies?.token;
+  if (!token) {
+    return res.status(401).send({ message: "unauthorized access" });
+  }
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: "unauthorized access" });
+    }
+    req.user = decoded;
+    next();
+  });
+};
+
+
 
 app.get("/", async (req, res) => {
   res.send("Skill swap server is running ");
@@ -49,22 +66,26 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/jwt", async(req, res)=>{
+    app.post("/jwt", async (req, res) => {
       const user = req.body;
-      console.log(user)
-      const token = jwt.sign(user, process.env.DB_ACCESS_TOKEN, {expiresIn: '1h'})
+      console.log(user);
+      const token = jwt.sign(user, process.env.DB_ACCESS_TOKEN, {
+        expiresIn: "1h",
+      });
       res
-      .cookie('token', token,{
-        httpOnly: true,
-        secure:true,
-        sameSite:'none'
-      }).send({success:true})
-    })
-    app.post('/userOut', async(req,res)=>{
-      res.clearCookie('token', {maxAge:0}).send({success:true})
-    })
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "none",
+        })
+        .send({ success: true });
+    });
+    app.post("/userOut", async (req, res) => {
+      res.clearCookie("token", { maxAge: 0 }).send({ success: true });
+    });
 
     app.get("/Bids", async (req, res) => {
+      
       let query = {};
       if (req.query.email) {
         query = { email: req.query.email };
@@ -73,7 +94,10 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/BidReq", async (req, res) => {
+    app.get("/BidReq", verifyToken, async (req, res) => {
+      if(req.user?.email !== req.query?.email){
+        res.status(401).send({ message: "unauthorized access" });
+      }
       let query = {};
       if (req.query.buyerEmail) {
         query = { buyerEmail: req.query.buyerEmail };
@@ -82,7 +106,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/Jobs", async (req, res) => {
+    app.get("/Jobs",  async (req, res) => {
       const result = await JobsData.find().toArray();
       res.send(result);
     });
@@ -100,7 +124,10 @@ async function run() {
       const result = await JobsData.findOne(query);
       res.send(result);
     });
-    app.get("/JobEmail", async (req, res) => {
+    app.get("/JobEmail",verifyToken, async (req, res) => {
+      if(req.user?.email !== req.query?.email){
+        res.status(401).send({ message: "unauthorized access" });
+      }
       let query = {};
       if (req.query.email) {
         query = { email: req.query.email };
@@ -128,9 +155,9 @@ async function run() {
       res.send(result);
     });
 
-    app.put('/BidReq/:id', async (req, res) => {
-      const id = req.params.id
-      const query = { _id: new ObjectId(id) }
+    app.put("/BidReq/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
       const updateStatus = {
         $set: {
           status: req.body.status,
