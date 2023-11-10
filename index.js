@@ -124,6 +124,7 @@ async function run() {
       const result = await JobsData.findOne(query);
       res.send(result);
     });
+
     app.get("/JobEmail",verifyToken, async (req, res) => {
       if(req.user?.email !== req.query?.email){
         res.status(401).send({ message: "unauthorized access" });
@@ -149,6 +150,7 @@ async function run() {
           description: update.description,
           category: update.category,
           status: update.status,
+          
         },
       };
       const result = await JobsData.updateOne(filter, updatedJobs);
