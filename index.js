@@ -10,7 +10,7 @@ const cookieParser = require("cookie-parser");
 app.use(express.json());
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://skillswaphub-6e7fd.web.app"],
+    origin: ["http://localhost:5173", "https://bidplus.netlify.app"],
     credentials: true,
   })
 );
@@ -50,7 +50,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     const JobsData = client.db("SkillSwap").collection("JobsData");
     const BidData = client.db("SkillSwap").collection("BidData");
 
@@ -66,23 +66,7 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/jwt", async (req, res) => {
-      const user = req.body;
-      console.log(user);
-      const token = jwt.sign(user, process.env.DB_ACCESS_TOKEN, {
-        expiresIn: "1h",
-      });
-      res
-        .cookie("token", token, {
-          httpOnly: true,
-          secure: true,
-          sameSite: "none",
-        })
-        .send({ success: true });
-    });
-    app.post("/userOut", async (req, res) => {
-      res.clearCookie("token", { maxAge: 0 }).send({ success: true });
-    });
+    
 
     app.get("/Bids", async (req, res) => {
       
@@ -94,10 +78,8 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/BidReq", verifyToken, async (req, res) => {
-      if(req.user?.email !== req.query?.email){
-        res.status(401).send({ message: "unauthorized access" });
-      }
+    app.get("/BidReq", async (req, res) => {
+      
       let query = {};
       if (req.query.buyerEmail) {
         query = { buyerEmail: req.query.buyerEmail };
@@ -125,10 +107,8 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/JobEmail",verifyToken, async (req, res) => {
-      if(req.user?.email !== req.query?.email){
-        res.status(401).send({ message: "unauthorized access" });
-      }
+    app.get("/JobEmail", async (req, res) => {
+      
       let query = {};
       if (req.query.email) {
         query = { email: req.query.email };
@@ -176,10 +156,10 @@ async function run() {
       res.send(result);
     });
 
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // await client.db("admin").command({ ping: 1 });
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
